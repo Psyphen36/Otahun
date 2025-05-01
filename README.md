@@ -1,4 +1,4 @@
-TERMS OF SERVICE AGREEMENT
+## TERMS OF SERVICE AGREEMENT
 
 This Terms of Service Agreement (the "Agreement") is entered into between [Ozz] ("Bot Owner") and the user ("User") of the [Otahun] Discord bot.
 
@@ -14,4 +14,7 @@ By using the Bot, the User agrees to be bound by the terms of this Agreement. If
 8. Governing Law: This Agreement shall be governed by and construed in accordance with the laws of [Your_countries/state/province]. Any dispute arising under or in connection with this Agreement shall be resolved by arbitration.
 9. Entire Agreement: This Agreement constitutes the entire agreement between the parties and supersedes all prior or contemporaneous agreements or representations, whether written or oral, relating to the Bot.
 10. Shapes TOS: Since this bot is made by using Shapes this is their Terms of Service user can check https://shapes.inc/terms
+
+## Privacy
+1. Bot Owner collects no data of a user but the bot uses users chat data to improve itself But no personal data is being gathered by the Bot Owner or The Bot Otahun to know more about your privacy check https://wiki.shapes.inc/shape-creator-essentials/guidelines-and-privacy
 By using the Bot, the User acknowledges that they have read this Agreement, understand it, and agree to be bound by its terms and conditions.
