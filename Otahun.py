@@ -3,6 +3,7 @@ import discord
 import asyncio
 import logging
 from openai import OpenAI as RawOpenAI
+from keep_alive import keep_alive
 
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ["SHAPES_API_KEY"]
@@ -12,7 +13,7 @@ MAX_CHARS = 2000
 
 # Initialize raw OpenAI client if needed elsewhere
 shapes = RawOpenAI(api_key=SHAPES_API_KEY, base_url=BASE_URL)
-
+keep_alive()
 # ─── UTILITY ────────────────────────────────────────────────────────────────────
 def chunk_text(text: str, max_size: int = MAX_CHARS) -> list[str]:
     """Split text into ≤ max_size chunks at newlines or spaces."""
