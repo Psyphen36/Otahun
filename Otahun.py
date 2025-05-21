@@ -11,9 +11,10 @@ DISCORD_TOKEN = os.environ["DISCORD_TOKEN"]
 BASE_URL = "https://api.shapes.inc/v1/"
 MAX_CHARS = 2000
 
-# Initialize raw OpenAI client if needed elsewhere
+# Initialize raw OpenAI client
 shapes = RawOpenAI(api_key=SHAPES_API_KEY, base_url=BASE_URL)
 keep_alive()
+
 # ─── UTILITY ────────────────────────────────────────────────────────────────────
 def chunk_text(text: str, max_size: int = MAX_CHARS) -> list[str]:
     """Split text into ≤ max_size chunks at newlines or spaces."""
@@ -42,7 +43,7 @@ class MyClient(discord.Client):
 
     async def on_message(self, message: discord.Message):
         # ignore the bot itself or messages where it's not mentioned
-        if message.author.id == self.user.id or self.user.id not in [u.id for u in message.mentions]:
+        if message.author.id == self.user.id or not self.user in message.mentions:
             return
 
         user_id = message.author.id
@@ -56,28 +57,29 @@ class MyClient(discord.Client):
             )
             self.histories[user_id] = [{"role": "system", "content": system_prompt}]
 
-        # Build the context messages list fresh for this call
+        # Remove bot mention and prepare user message
+        prompt = message.content.replace(f"<@!{self.user.id}>", "").replace(f"<@{self.user.id}>", "").strip()
+
+        # Gather messages: start from system, include all past user+assistant
         messages = list(self.histories[user_id])
 
-        # If replying to someone else, include their message as user context
+        # If replying, fetch and insert original message from other user
         if message.reference and message.reference.message_id:
             try:
                 ref_msg = await channel.fetch_message(message.reference.message_id)
-                context_content = f"{ref_msg.author.display_name} said: {ref_msg.content}"
-                logging.info(f"Adding reply context for user {user_id}: {context_content}")
-                messages.append({"role": "user", "content": context_content})
+                context_msg = f"{ref_msg.author.display_name} said: {ref_msg.content}"
+                messages.append({"role": "user", "content": context_msg})
+                # Also store context in history so it isn't duplicated later
+                self.histories[user_id].append({"role": "system", "content": context_msg})
             except Exception as e:
-                logging.warning(f"Could not fetch referenced message: {e}")
+                logging.warning(f"Reply context fetch failed: {e}")
 
-        # Extract the user's prompt (strip mention)
-        prompt = message.content
-        # remove all mention forms
-        prompt = prompt.replace(f"<@!{self.user.id}>", "").replace(f"<@{self.user.id}>", "").strip()
+        # Append the actual user prompt
         messages.append({"role": "user", "content": prompt})
+        self.histories[user_id].append({"role": "user", "content": prompt})
 
         try:
             async with channel.typing():
-                # call Shapes chat completion with constructed history
                 response = shapes.chat.completions.create(
                     model="shapesinc/otahun",
                     messages=messages
@@ -85,11 +87,10 @@ class MyClient(discord.Client):
                 reply = response.choices[0].message.content
                 await asyncio.sleep(0.2)
 
-            # update stored history with new messages
-            self.histories[user_id].extend(messages[len(self.histories[user_id]):])
+            # Store assistant response
             self.histories[user_id].append({"role": "assistant", "content": reply})
 
-            # send the reply in manageable chunks
+            # Send reply in chunks
             for part in chunk_text(reply):
                 await channel.send(part)
 
