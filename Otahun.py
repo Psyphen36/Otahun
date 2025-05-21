@@ -3,10 +3,6 @@ import discord
 import asyncio
 import logging
 from openai import OpenAI as RawOpenAI
-from keep_alive import keep_alive
-
-# ─── KEEP THE BOT ALIVE ─────────────────────────────────────────────────────────
-keep_alive()
 
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ["SHAPES_API_KEY"]
