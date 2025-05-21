@@ -7,7 +7,7 @@ from openai import OpenAI as RawOpenAI
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ["SHAPES_API_KEY"]
 DISCORD_TOKEN = os.environ["DISCORD_TOKEN"]
-BASE_URL = "https://your.shapes.api.host/v1"
+BASE_URL = "https://api.shapes.inc/v1/"
 MAX_CHARS = 2000
 
 # Initialize raw OpenAI client if needed elsewhere
