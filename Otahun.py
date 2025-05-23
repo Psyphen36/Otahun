@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
 from openai import OpenAI as RawOpenAI
+from keep_alive import keep_alive
 
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ["SHAPES_API_KEY"]
@@ -19,6 +20,7 @@ RATE_LIMIT_REQUESTS = 10    # Max requests per user per minute
 TYPING_DELAY = 0.5         # Seconds to show typing indicator
 
 # Initialize Shapes API client
+keep_alive()
 shapes = RawOpenAI(api_key=SHAPES_API_KEY, base_url=BASE_URL)
 
 # ─── DATA STRUCTURES ───────────────────────────────────────────────────────────
