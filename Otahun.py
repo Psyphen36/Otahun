@@ -95,8 +95,7 @@ class AdvancedChatBot(discord.Client):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening, 
-                name='''Hey i'm Otahun
-                        ~created by ozz
+                name='''Listening... just @ me! 👂 | Made by Ozz
                 '''
             )
         )
@@ -196,20 +195,22 @@ class AdvancedChatBot(discord.Client):
                 messages.extend(recent_context)
             except Exception:
                 pass
-            if message.reference and message.reference.message_id:
-                try:
-                    ref = await message.channel.fetch_message(message.reference.message_id)
-                    # original attachments
-                    reply_context = f"[Replying to {ref.author.display_name}]: {ref.content[:500]}"
-                    if ref.attachments:
-                        for att in ref.attachments:
-                         messages.append({"role":"user","content":reply_context})
-                    if hasattr(ref, 'stickers') and ref.stickers:
-                        for st in ref.stickers:
-                            url = f"https://cdn.discordapp.com/stickers/{st.id}.png"
-                            messages.append({"role": "user", "content": f"[Sticker] {st.name} {url}"})
-                except Exception:
-                    pass
+            try:
+                ref = await message.channel.fetch_message(message.reference.message_id)
+                # always include the replied‐to text as context
+                reply_text = ref.content or ""
+                reply_context = f"[Replying to {ref.author.display_name}]: {reply_text[:500]}"
+                messages.append({"role":"user","content": reply_context})
+
+                # optional: also include any attachments or stickers
+                for att in ref.attachments:
+                    messages.append({"role":"user","content": f"[Attachment] {att.url}"})
+                if hasattr(ref, 'stickers'):
+                    for st in ref.stickers:
+                        url = f"https://cdn.discordapp.com/stickers/{st.id}.png"
+                        messages.append({"role":"user","content": f"[Sticker] {st.name} {url}"})
+            except Exception:
+                pass
 
             # include current message attachements
             if message.attachments:
