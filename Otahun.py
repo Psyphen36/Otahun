@@ -129,12 +129,43 @@ class AdvancedChatBot(discord.Client):
 
     async def _process_message(self, message: discord.Message, context: ChannelContext) -> str:
         msgs = []
+        # include recent text context
         for m in context.recent_messages:
             msgs.append({"role": "user", "content": f"{m['author']}: {m['content']}"})
+
+        # If this message is a reply, include original message's attachments and stickers
+        if message.reference and message.reference.message_id:
+            try:
+                orig = await message.channel.fetch_message(message.reference.message_id)
+                # original attachments
+                if orig.attachments:
+                    for att in orig.attachments:
+                        msgs.append({"role": "user", "content": f"[Attachment] {att.url}"})
+                # original stickers (CDN URL format)
+                if hasattr(orig, 'stickers') and orig.stickers:
+                    for st in orig.stickers:
+                        url = f"https://cdn.discordapp.com/stickers/{st.id}.png"
+                        msgs.append({"role": "user", "content": f"[Sticker] {st.name} {url}"})
+            except Exception:
+                pass
+
+        # include current message attachments
+        if message.attachments:
+            for att in message.attachments:
+                msgs.append({"role": "user", "content": f"[Attachment] {att.url}"})
+        # include current message stickers
+        if hasattr(message, 'stickers') and message.stickers:
+            for st in message.stickers:
+                url = f"https://cdn.discordapp.com/stickers/{st.id}.png"
+                msgs.append({"role": "user", "content": f"[Sticker] {st.name} {url}"})
+
+        # prepare current message content
         content = message.content
         if message.author.bot:
             content = f"[BOT] {message.author.display_name}: {content}"
         msgs.append({"role": "user", "content": content})
+
+        # Call Shapes API
         result = await asyncio.to_thread(
             shapes.chat.completions.create,
             model="shapesinc/otahun",
