@@ -95,7 +95,7 @@ class AdvancedChatBot(discord.Client):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening, 
-                name='''Listening... just @ me! 👂 | Made by Ozz
+                name='''just @ me! 👂 | Made by Ozz
                 '''
             )
         )
