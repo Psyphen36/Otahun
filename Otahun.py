@@ -4,6 +4,7 @@ import asyncio
 import logging
 import json
 import time
+from discord import app_commands
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
@@ -84,9 +85,34 @@ class AdvancedChatBot(discord.Client):
         intents.reactions = True
         intents.typing = True
         super().__init__(intents=intents, **kwargs)
+        self.active_channels: Set[int] = set()
+        self.tree = app_commands.CommandTree(self)
         self.user_sessions: Dict[int, UserSession] = {}
-        self.channel_contexts: Dict[int, ChannelContext] = {}
+        self.user_contexts: Dict[tuple[int,int], ChannelContext] = {}
         self.rate_limits: Dict[int, List[datetime]] = {}
+
+    async def setup_hook(self):
+        # Register the /active command when the bot is ready
+        self.tree.add_command(self.active)
+        await self.tree.sync()
+
+    @app_commands.command(
+        name="active",
+        description="Toggle active listening in this channel"
+        )
+    
+    async def active(self, interaction: discord.Interaction):
+        cid = interaction.channel_id
+        if cid in self.active_channels:
+            self.active_channels.remove(cid)
+            await interaction.response.send_message(
+                f"🔕 I will now ignore this channel.", ephemeral=True
+            )
+        else:
+            self.active_channels.add(cid)
+            await interaction.response.send_message(
+                f"✅ I am now active in this channel!", ephemeral=True
+            )
 
     async def on_ready(self):
         logging.info(f"🤖 {self.user} is now online!")
@@ -95,7 +121,7 @@ class AdvancedChatBot(discord.Client):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening, 
-                name='''just @ me! 👂 | Made by Ozz
+                name='''Hey i'm Otahun ozz is my creator
                 '''
             )
         )
@@ -119,23 +145,29 @@ class AdvancedChatBot(discord.Client):
                 except Exception:
                     pass
 
+            is_active = message.channel.id in self.active_channels
+            if not is_active:
             # bail if neither mentioned nor replying to the bot
-            if not (is_mentioned or is_reply_to_bot):
+                if not (is_mentioned or is_reply_to_bot):
+                    return
+            elif message.author.bot:
                 return
-
             # rate-limit, context updates, AI call, etc. continue here...
             if not await self._check_rate_limit(message.author.id):
                 await message.reply("⏰ Please slow down! You're sending messages too quickly.")
                 return
             await self._update_user_session(message.author)
-            channel_context = await self._get_channel_context(message.channel.id)
+            # pick (channel, user) as the context key:
+            ctx_key = (message.channel.id, message.author.id)
+            channel_context = await self._get_user_context(ctx_key)
 
             async with message.channel.typing():
                 response = await self._process_message(message, channel_context)
                 await asyncio.sleep(TYPING_DELAY)
 
             await self._send_response(message.channel, response)
-            await self._update_channel_context(message, response, channel_context)
+            await self._update_channel_context(message, response, channel_context, ctx_key)
+            return
 
         except Exception as e:
             logging.exception(f"Critical error in on_message: {e}")
@@ -168,14 +200,19 @@ class AdvancedChatBot(discord.Client):
                 request_reset_time=now + timedelta(hours=1)
             )
 
-    async def _get_channel_context(self, channel_id: int) -> ChannelContext:
-        if channel_id not in self.channel_contexts:
-            self.channel_contexts[channel_id] = ChannelContext(
-                channel_id=channel_id,
+    async def _get_user_context(self, ctx_key: tuple[int,int]) -> ChannelContext:
+        """
+        Returns the per-(channel, user) context,
+        so each user’s history is kept separate.
+        """
+        if ctx_key not in self.user_contexts:
+            ch_id, usr_id = ctx_key
+            self.user_contexts[ctx_key] = ChannelContext(
+                channel_id=ch_id,
                 recent_messages=[],
                 last_cleanup=datetime.now()
             )
-        return self.channel_contexts[channel_id]
+        return self.user_contexts[ctx_key]
 
     async def _process_message(self, message: discord.Message, context: ChannelContext) -> str:
         # msgs = []
@@ -232,7 +269,10 @@ class AdvancedChatBot(discord.Client):
                 model="shapesinc/otahun",
                 messages=messages,
                 temperature=0.7,
-                max_tokens=2000
+                max_tokens=2000,
+                # pass the Discord user ID (or any string that uniquely identifies them)
+                user=str(message.author.id),
+
             )
             logging.info(f"✅ Received response from Shapes API ({len(api_result.choices)} choice(s))")
             return api_result.choices[0].message.content
@@ -256,15 +296,17 @@ class AdvancedChatBot(discord.Client):
             try: await channel.send("❌ I had trouble sending my response. Please try again.")
             except: pass
 
-    async def _update_channel_context(self, message, response, context: ChannelContext):
+    async def _update_channel_context(self, message, response, context: ChannelContext, ctx_key: tuple[int,int]):
         context.recent_messages.append({
             'author': message.author.display_name,
             'content': message.content[:500],
             'timestamp': datetime.now(),
             'message_id': message.id
         })
+        # trim old memories
         if len(context.recent_messages) > MAX_CONTEXT_MESSAGES:
             context.recent_messages = context.recent_messages[-MAX_CONTEXT_MESSAGES:]
+        # no need to re-assign back, since context is a mutable object
 
     async def _send_error_response(self, channel, error: Exception):
         opts = [
