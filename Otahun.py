@@ -4,6 +4,7 @@ import asyncio
 import logging
 import json
 import time
+import re
 from discord import app_commands
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set
@@ -19,6 +20,10 @@ MAX_CHARS = 2000
 MAX_CONTEXT_MESSAGES = 10  # Number of recent messages to include for context
 RATE_LIMIT_REQUESTS = 10    # Max requests per user per minute
 TYPING_DELAY = 0.5         # Seconds to show typing indicator
+RESET_RE = re.compile(r'(?i)(?:^|\s)!reset(?:\s|$)')
+WACK_RE  = re.compile(r'(?i)(?:^|\s)!wack(?:\s|$)')
+INFO_RE  = re.compile(r'(?i)(?:^|\s)!info(?:\s|$)')
+
 
 # Initialize Shapes API client
 shapes = RawOpenAI(api_key=SHAPES_API_KEY, base_url=BASE_URL)
@@ -132,10 +137,26 @@ class AdvancedChatBot(discord.Client):
             return
 
         # ——— Prefix-based activation toggles ———
-        raw = message.content.strip()
+        raw = message.content
         for fmt in (f"<@!{self.user.id}>", f"<@{self.user.id}>"):
-            if raw.startswith(fmt):
-                raw = raw[len(fmt):].strip()
+            raw = re.sub(rf'^{re.escape(fmt)}\s*', '', raw)
+
+        # ─── BLOCK RESET ────────────────────────────────────────────────────────
+        if RESET_RE.search(raw):
+            # Optionally restrict to bot owner only:
+            # OWNER_ID = int(os.environ["BOT_OWNER_ID"])
+            # if message.author.id != OWNER_ID:
+            return await message.channel.send("LoL you thought you have permission to reset my memory! In your dreams! <:smug:1358014214148591768>.")
+        # ─────────────────────────────────────────────────────────────────────────
+        # ─── WACK: CLEAR CONVERSATION HISTORY ────────────────────────────────────────────────────────
+        if WACK_RE.search(raw):
+            # Optionally restrict to bot owner only:
+            # OWNER_ID = int(os.environ["BOT_OWNER_ID"])
+            # if message.author.id != OWNER_ID:
+            return await message.channel.send("🚫 You don’t have permission to use `!wack` <:smug:1358014214148591768>.")
+
+        # ─────────────────────────────────────────────────────────────────────────
+
         if raw.startswith("$activate"):
             cid = message.channel.id
             if cid not in self.active_channels:
