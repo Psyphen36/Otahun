@@ -149,7 +149,7 @@ class AdvancedChatBot(discord.Client):
                 
         stripped = raw.strip()
         for fmt in (f"<@!{self.user.id}>", f"<@{self.user.id}>"):
-        raw = re.sub(rf'^{re.escape(fmt)}\s*', '', raw)
+        stripped = re.sub(rf'^{re.escape(fmt)}\s*', '', raw)
         if raw.startswith("$activate"):
             cid = message.channel.id
             if cid not in self.active_channels:
