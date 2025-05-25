@@ -150,7 +150,7 @@ class AdvancedChatBot(discord.Client):
         stripped = raw.strip()
         for fmt in (f"<@!{self.user.id}>", f"<@{self.user.id}>"):
         stripped = re.sub(rf'^{re.escape(fmt)}\s*', '', raw)
-        if raw.startswith("$activate"):
+        if stripped.startswith("$activate"):
             cid = message.channel.id
             if cid not in self.active_channels:
                 self.active_channels.add(cid)
@@ -158,7 +158,7 @@ class AdvancedChatBot(discord.Client):
             else:
                 await message.channel.send("⚠️ I'm already activated in this channel.")
             return
-        if raw.startswith("$deactivate"):
+        if stripped.startswith("$deactivate"):
             cid = message.channel.id
             if cid in self.active_channels:
                 self.active_channels.remove(cid)
