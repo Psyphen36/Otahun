@@ -315,7 +315,7 @@ class AdvancedChatBot(discord.Client):
                     await asyncio.sleep(0.5)
 
                 # for the first chunk reply to the user; subsequent chunks can also reply
-                await message.reply(chunk, mention_author=False)
+                await message.reply(chunk, mention_author=True)
         except Exception as e:
             logging.error(f"Send response error: {e}")
             try: await channel.send("❌ I had trouble sending my response. Please try again.")
