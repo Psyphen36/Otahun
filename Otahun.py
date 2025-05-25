@@ -121,7 +121,8 @@ class AdvancedChatBot(discord.Client):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening, 
-                name='''Hey i'm Otahun ozz is my creator
+                name='''@ me or go to https://discord.com/channels/1276776215147053119/1366881614679900280
+~created by ozz
                 '''
             )
         )
