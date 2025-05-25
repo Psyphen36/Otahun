@@ -127,11 +127,32 @@ class AdvancedChatBot(discord.Client):
         )
 
     async def on_message(self, message: discord.Message):
-        try:
-            # never respond to yourself
-            if message.author.id == self.user.id:
-                return
+        # never respond to yourself
+        if message.author.id == self.user.id:
+            return
 
+        # ——— Prefix-based activation toggles ———
+        raw = message.content.strip()
+        for fmt in (f"<@!{self.user.id}>", f"<@{self.user.id}>"):
+            if raw.startswith(fmt):
+                raw = raw[len(fmt):].strip()
+        if raw.startswith("$activate"):
+            cid = message.channel.id
+            if cid not in self.active_channels:
+                self.active_channels.add(cid)
+                await message.channel.send("✅ Activated: I'll now listen here without a mention.")
+            else:
+                await message.channel.send("⚠️ I'm already activated in this channel.")
+            return
+        if raw.startswith("$deactivate"):
+            cid = message.channel.id
+            if cid in self.active_channels:
+                self.active_channels.remove(cid)
+                await message.channel.send("🔕 Deactivated: back to mention-only mode.")
+            else:
+                await message.channel.send("⚠️ I'm not currently activated here.")
+            return
+        try:
             # check for explicit @mention
             is_mentioned = self.user in message.mentions
 
@@ -147,11 +168,11 @@ class AdvancedChatBot(discord.Client):
 
             is_active = message.channel.id in self.active_channels
             if not is_active:
-            # bail if neither mentioned nor replying to the bot
+                # in “mention” mode, bail unless we’re mentioned or replied‐to
                 if not (is_mentioned or is_reply_to_bot):
                     return
-            elif message.author.bot:
-                return
+            # in active mode we drop the “other-bot” check so we can chat with other bots
+
             # rate-limit, context updates, AI call, etc. continue here...
             if not await self._check_rate_limit(message.author.id):
                 await message.reply("⏰ Please slow down! You're sending messages too quickly.")
@@ -165,7 +186,7 @@ class AdvancedChatBot(discord.Client):
                 response = await self._process_message(message, channel_context)
                 await asyncio.sleep(TYPING_DELAY)
 
-            await self._send_response(message.channel, response)
+            await self._send_response(message, response)
             await self._update_channel_context(message, response, channel_context, ctx_key)
             return
 
@@ -284,13 +305,17 @@ class AdvancedChatBot(discord.Client):
     def _build_context_messages(self, context: ChannelContext, channel) -> List[Dict[str,str]]:
         return []
 
-    async def _send_response(self, channel, response: str):
+    async def _send_response(self, message: discord.Message, response: str):
         try:
             if not response.strip(): response = "I'm not sure how to respond to that."
             formatted = format_for_discord(response)
             for i, chunk in enumerate(chunk_text(formatted)):
-                if i>0: await asyncio.sleep(0.5)
-                await channel.send(chunk)
+                # small pause between multi-part replies
+                if i > 0:
+                    await asyncio.sleep(0.5)
+
+                # for the first chunk reply to the user; subsequent chunks can also reply
+                await message.reply(chunk, mention_author=False)
         except Exception as e:
             logging.error(f"Send response error: {e}")
             try: await channel.send("❌ I had trouble sending my response. Please try again.")
