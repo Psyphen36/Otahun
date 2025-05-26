@@ -21,7 +21,7 @@ MAX_CONTEXT_MESSAGES = 10  # Number of recent messages to include for context
 RATE_LIMIT_REQUESTS = 10    # Max requests per user per minute
 TYPING_DELAY = 0.5         # Seconds to show typing indicator
 RESET_RE = re.compile(r'(?:^|\s)!reset(?=\s|$|[!.,?])', re.IGNORECASE)
-WACK_RE  = re.compile(r'(?:^|\s)!wack(?=\s|$|[!.,?])',  re.IGNORECASE)
+
 
 
 # Initialize Shapes API client
@@ -142,9 +142,7 @@ class AdvancedChatBot(discord.Client):
         
         if RESET_RE.search(raw):
             return await message.channel.send("LoL you thought you have permission to reset my memory! In your dreams! <:smug:1358014214148591768>.")
-        if WACK_RE.search(raw):
-            return await message.channel.send("🚫 You don’t have permission to use that command <:smug:1358014214148591768>.")
-
+        
         # ─────────────────────────────────────────────────────────────────────────
                 
         stripped = raw.strip()
