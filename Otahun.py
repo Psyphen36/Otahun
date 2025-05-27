@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
 from openai import OpenAI as RawOpenAI
-from keep_alive import keep_alive
 
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ.get("SHAPES_API_KEY")
@@ -22,6 +21,28 @@ RATE_LIMIT_REQUESTS = 10    # Max requests per user per minute
 TYPING_DELAY = 0.5         # Seconds to show typing indicator
 RESET_RE = re.compile(r'(?:^|\s)!reset(?=\s|$|[!.,?])', re.IGNORECASE)
 
+# ─── KEYWORD TRIGGERS ─────────────────────────────────────────────────────────
+# Keys are regex patterns; values are either static replies or callables
+KEYWORD_TRIGGERS: List[str] = [
+    r'\bpizza\b',
+    r'\bserver down\b',
+    r'\bserver dead\b',
+    r'\bbug bounty\b',
+    r'\bhacking\b',
+    r'\bdiscord\b',
+    r'\botahun\b',
+    r'\bcoding\b',
+    r'\banime\b',
+    r'\bwaifu\b',
+    r'\bgeek\b',
+    r'\bnerd\b',
+    r'\bserver is dead\b',
+    r'\bhelp\b',
+    r'\broast\b',
+    r'\bnarcissist\b',
+    r'\beveryone\b',
+    r'\banyone\b'
+]
 
 
 # Initialize Shapes API client
@@ -131,13 +152,21 @@ class AdvancedChatBot(discord.Client):
         )
 
     async def on_message(self, message: discord.Message):
-        # never respond to yourself
-        if message.author.id == self.user.id:
-            return
 
         # ——— Prefix-based activation toggles ———
         raw = message.content
 
+        # ─── NEVER RESPOND TO YOURSELF ───────────────────────────
+        if message.author.id == self.user.id:
+            return
+
+        # ─── KEYWORD TRIGGER DETECTION ────────────────────────────
+        # If any trigger matches, we'll force the bot to process this message
+        forced_active = False
+        for pat in KEYWORD_TRIGGERS:
+            if re.search(pat, message.content, re.IGNORECASE):
+                forced_active = True
+                break
         # ─── BLOCK RESET ────────────────────────────────────────────────────────
         
         if RESET_RE.search(raw):
@@ -179,10 +208,10 @@ class AdvancedChatBot(discord.Client):
                     pass
 
             is_active = message.channel.id in self.active_channels
-            if not is_active:
-                # in “mention” mode, bail unless we’re mentioned or replied‐to
-                if not (is_mentioned or is_reply_to_bot):
-                    return
+            # If the channel is active, or we’re mentioned/replied‐to, or
+            # a keyword triggered, proceed; otherwise bail out.
+            if not (is_active or is_mentioned or is_reply_to_bot or forced_active):
+                return
             # in active mode we drop the “other-bot” check so we can chat with other bots
 
             # rate-limit, context updates, AI call, etc. continue here...
@@ -397,5 +426,4 @@ def main():
         logging.info("👋 Bot shut down gracefully.")
 
 if __name__ == "__main__":
-    keep_alive()
     main()
