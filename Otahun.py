@@ -23,28 +23,27 @@ RESET_RE = re.compile(r'(?:^|\s)!reset(?=\s|$|[!.,?])', re.IGNORECASE)
 
 # ─── KEYWORD TRIGGERS ─────────────────────────────────────────────────────────
 # Keys are regex patterns; values are either static replies or callables
-KEYWORD_TRIGGERS: List[str] = [
-    r'\bpizza\b',
-    r'\bserver down\b',
-    r'\bserver dead\b',
-    r'\bbug bounty\b',
-    r'\bhacking\b',
-    r'\bdiscord\b',
-    r'\botahun\b',
-    r'\bcoding\b',
-    r'\banime\b',
-    r'\bwaifu\b',
-    r'\bgeek\b',
-    r'\bnerd\b',
-    r'\bserver is dead\b',
-    r'\bhelp\b',
-    r'\broast\b',
-    r'\bnarcissist\b',
-    r'\beveryone\b',
-    r'\banyone\b',
-    r'\bteach\b',
-    r'\bskill\b'
-    
+KEYWORD_TRIGGERS = [
+    re.compile(r'\bpizza\b', re.IGNORECASE),
+    re.compile(r'\bserver down\b', re.IGNORECASE),
+    re.compile(r'\bserver dead\b', re.IGNORECASE),
+    re.compile(r'\bbug bounty\b', re.IGNORECASE),
+    re.compile(r'\bhacking\b', re.IGNORECASE),
+    re.compile(r'\bdiscord\b', re.IGNORECASE),
+    re.compile(r'\botahun\b', re.IGNORECASE),
+    re.compile(r'\bcoding\b', re.IGNORECASE),
+    re.compile(r'\banime\b', re.IGNORECASE),
+    re.compile(r'\bwaifu\b', re.IGNORECASE),
+    re.compile(r'\bgeek\b', re.IGNORECASE),
+    re.compile(r'\bnerd\b', re.IGNORECASE),
+    re.compile(r'\bhelp\b', re.IGNORECASE),
+    re.compile(r'\broast\b', re.IGNORECASE),
+    re.compile(r'\bnarcissist\b', re.IGNORECASE),
+    re.compile(r'\beveryone\b', re.IGNORECASE),
+    re.compile(r'\banyone\b', re.IGNORECASE),
+    re.compile(r'\bteach\b', re.IGNORECASE),
+    re.compile(r'\bskill\b', re.IGNORECASE),
+    re.compile(r'\bhack\b', re.IGNORECASE)
 ]
 
 
@@ -166,8 +165,8 @@ class AdvancedChatBot(discord.Client):
         # ─── KEYWORD TRIGGER DETECTION ────────────────────────────
         # If any trigger matches, we'll force the bot to process this message
         forced_active = False
-        for pat in KEYWORD_TRIGGERS:
-            if re.search(pat, message.content, re.IGNORECASE):
+        for regex in KEYWORD_TRIGGERS:
+            if regex.search(message.content):
                 forced_active = True
                 break
         # ─── BLOCK RESET ────────────────────────────────────────────────────────
