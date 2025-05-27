@@ -43,7 +43,9 @@ KEYWORD_TRIGGERS = [
     re.compile(r'\banyone\b', re.IGNORECASE),
     re.compile(r'\bteach\b', re.IGNORECASE),
     re.compile(r'\bskill\b', re.IGNORECASE),
-    re.compile(r'\bhack\b', re.IGNORECASE)
+    re.compile(r'\bhack\b', re.IGNORECASE),
+    re.compile(r'\bsolve this\b', re.IGNORECASE),
+    re.compile(r'\bsolve\b', re.IGNORECASE)
 ]
 
 
