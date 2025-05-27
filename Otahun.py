@@ -41,7 +41,10 @@ KEYWORD_TRIGGERS: List[str] = [
     r'\broast\b',
     r'\bnarcissist\b',
     r'\beveryone\b',
-    r'\banyone\b'
+    r'\banyone\b',
+    r'\bteach\b',
+    r'\bskill\b'
+    
 ]
 
 
