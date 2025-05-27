@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
 from openai import OpenAI as RawOpenAI
+from keep_alive import keep_alive
 
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ.get("SHAPES_API_KEY")
@@ -430,4 +431,5 @@ def main():
         logging.info("👋 Bot shut down gracefully.")
 
 if __name__ == "__main__":
+    keep_alive()
     main()
