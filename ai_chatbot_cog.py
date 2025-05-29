@@ -45,7 +45,8 @@ KEYWORD_TRIGGERS = [
     re.compile(r'\bskill\b', re.IGNORECASE),
     re.compile(r'\bhack\b', re.IGNORECASE),
     re.compile(r'\bsolve this\b', re.IGNORECASE),
-    re.compile(r'\bsolve\b', re.IGNORECASE)
+    re.compile(r'\bsolve\b', re.IGNORECASE),
+    re.compile(r'\bmf\b', re.IGNORECASE)
 ]
 
 # Initialize Shapes API client
