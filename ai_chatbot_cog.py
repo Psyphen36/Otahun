@@ -321,7 +321,7 @@ class AIChatbotCog(commands.Cog):
             logging.info(f"🔄 Sending request to Shapes API for user {message.author} in channel {message.channel.id}")
             api_result = await asyncio.to_thread(
                 shapes.chat.completions.create,
-                model="MODEL",
+                model=MODEL,
                 messages=messages,
                 temperature=0.7,
                 max_tokens=2000,
