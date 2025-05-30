@@ -14,6 +14,7 @@ from openai import OpenAI as RawOpenAI
 
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ.get("SHAPES_API_KEY")
+MODEL = os.environ.get("MODEL")
 BASE_URL = "https://api.shapes.inc/v1/"
 MAX_CHARS = 2000
 MAX_CONTEXT_MESSAGES = 10  # Number of recent messages to include for context
@@ -320,7 +321,7 @@ class AIChatbotCog(commands.Cog):
             logging.info(f"🔄 Sending request to Shapes API for user {message.author} in channel {message.channel.id}")
             api_result = await asyncio.to_thread(
                 shapes.chat.completions.create,
-                model="shapesinc/otahun",
+                model="MODEL",
                 messages=messages,
                 temperature=0.7,
                 max_tokens=2000,
