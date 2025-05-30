@@ -9,6 +9,7 @@ from keep_alive import keep_alive
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 SHAPES_API_KEY = os.environ.get("SHAPES_API_KEY")
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
+MODEL = os.environ.get("MODEL")
 BASE_URL = "https://api.shapes.inc/v1/"
 
 # Initialize Shapes API client for testing
@@ -70,7 +71,7 @@ def main():
     # Test Shapes API connection
     try:
         test = shapes.chat.completions.create(
-            model="shapesinc/otahun", 
+            model=MODEL, 
             messages=[{"role":"user","content":"test"}], 
             max_tokens=5
         )
