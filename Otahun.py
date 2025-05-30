@@ -37,8 +37,8 @@ class AIChatBot(commands.Bot):
             logging.info("✅ AI Chatbot cog loaded successfully")
             
             # Load the image caption cog
-            await self.load_extension('image_caption_cog')
-            logging.info("✅ Image Caption cog loaded successfully")
+            # await self.load_extension('image_caption_cog')
+            # logging.info("✅ Image Caption cog loaded successfully")
             
             # Sync slash commands
             await self.tree.sync()
