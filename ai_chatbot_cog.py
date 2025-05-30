@@ -24,7 +24,6 @@ RESET_RE = re.compile(r'(?:^|\s)!reset(?=\s|$|[!.,?])', re.IGNORECASE)
 # ─── KEYWORD TRIGGERS ─────────────────────────────────────────────────────────
 # Keys are regex patterns; values are either static replies or callables
 KEYWORD_TRIGGERS = [
-    re.compile(r'\bpizza\b', re.IGNORECASE),
     re.compile(r'\bserver down\b', re.IGNORECASE),
     re.compile(r'\bserver dead\b', re.IGNORECASE),
     re.compile(r'\bbug bounty\b', re.IGNORECASE),
