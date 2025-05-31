@@ -287,9 +287,6 @@ class AIChatbotCog(commands.Cog):
                 content = content.replace(
                     f'<@!{mention.id}>', f'@{mention.display_name}'
                 )
-                content = content.replace(
-                    f'<@{mention.id}>', f'@{mention.display_name}'
-                )
             content = content.strip()
 
             # Build messages without system prompt (offloaded to Shapes API)
