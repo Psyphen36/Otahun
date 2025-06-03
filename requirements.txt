@@ -1,0 +1,5 @@
+shapesinc
+discord.py
+flask
+asyncio
+logger
