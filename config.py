@@ -4,7 +4,7 @@ from os import environ as env
 database_url = environ.get("DATABASE_URL")
 
 if not database_url:
-raise ValueError("DATABASE_URL environment variable is not set!")
+  raise ValueError("DATABASE_URL environment variable is not set!")
 
 tortoise = {
   "connections": {
