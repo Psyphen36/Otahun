@@ -54,7 +54,7 @@ class AIChatBot(commands.Bot):
             # await self.load_extension("jishaku")
             # logging.info("✅ AI Chatbot cog loaded successfully")
             await Tortoise.init(config=config.tortoise)
-            await Tortoise.generate_schemas(safe=True)
+            # await Tortoise.generate_schemas(safe=True)
             logging.info("✅ DB loaded!")
       
         
