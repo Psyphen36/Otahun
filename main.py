@@ -51,8 +51,8 @@ class AIChatBot(commands.Bot):
         try:
           # Load the AI chatbot cog
             await self.load_extension("ai_chatbot_cog")
-            # await self.load_extension("jishaku")
-            # logging.info("✅ AI Chatbot cog loaded successfully")
+            await self.load_extension("jishaku")
+            logging.info("✅ AI Chatbot cog loaded successfully")
             await Tortoise.init(config=config.tortoise)
             # await Tortoise.generate_schemas(safe=True)
             logging.info("✅ DB loaded!")
@@ -115,7 +115,7 @@ def main():
     try:
       logging.info(f"🚀 Starting bot (attempt {retry+1}/{max_retries})")
       bot = AIChatBot()
-      bot.owner_ids=[768493364181336104]
+      bot.owner_ids=[730454267533459568, 768493364181336104]
       bot.shape=shapes
       bot.run(DISCORD_TOKEN)
       break
