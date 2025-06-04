@@ -6,7 +6,7 @@ tortoise = {
   "connections": {
     # "default": expand_db_url(postgres_database_url)
     # PostgreSQL Db URI
-    "default": expand_db_url("postgres://postgres:mtsstmmts@db.inaqcxovtliyknwtxrqb.supabase.co:5432/postgres")
+    "default": expand_db_url("DATABASE_URL")
     # "default": expand_db_url("sqlite://tempdb")
   },
   "apps": {
