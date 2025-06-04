@@ -28,16 +28,16 @@ del expand_db_url
 
 
 
-# # Jishaku Flags
+# Jishaku Flags
 
-# flags = [
-#   "no underscore",
-#   "hide",
-#   "retain",
-#   "force paginator",
-#   "no dm_traceback",
-# ]
+flags = [
+  "no underscore",
+  "hide",
+  "retain",
+  "force paginator",
+  "no dm_traceback",
+]
 
-# for flag in flags: env[("jishaku_"+flag).upper().replace(" ","_")] = "t"
-# del flags
+for flag in flags: env[("jishaku_"+flag).upper().replace(" ","_")] = "t"
+del flags
 
