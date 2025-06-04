@@ -3,5 +3,6 @@ discord.py
 flask
 asyncio
 logger
+jishaku
 tortoise-orm
 asyncpg
