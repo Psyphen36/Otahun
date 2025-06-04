@@ -1,7 +1,7 @@
 from tortoise.backends.base.config_generator import expand_db_url
 from os import environ as env
 
-database_url = environ.get("DATABASE_URL")
+database_url = env.get("DATABASE_URL")
 
 if not database_url:
   raise ValueError("DATABASE_URL environment variable is not set!")
