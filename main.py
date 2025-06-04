@@ -1,4 +1,4 @@
-import os
+import os, config
 import discord
 import logging
 import time
@@ -6,6 +6,7 @@ import time
 import asyncio
 from discord.ext import commands
 from keep_alive import keep_alive
+from tortoise import Tortoise
 from shapesinc import (
   shape,
   AsyncShape,
@@ -25,25 +26,14 @@ if not SHAPES_API_KEY:
 if not SHAPES_APP_ID:
     raise ValueError("SHAPES_APP_ID environment variable is not set.")
 
-print("shapes api key:", SHAPES_API_KEY)
-print("shapes app id:", SHAPES_APP_ID)
-print("discord token:", DISCORD_TOKEN)
+# print("shapes api key:", SHAPES_API_KEY)
+# print("shapes app id:", SHAPES_APP_ID)
+# print("discord token:", DISCORD_TOKEN)
 # Initialize Shapes API client for testing
 shapes = shape(SHAPES_API_KEY, MODEL, SHAPES_APP_ID, synchronous=False)
 
-user = User("0, 1377895141653614623")
+user = User("0")
 # channel = Channel("0")
-# flags = [
-#   "no underscore",
-#   "hide",
-#   "retain",
-#   "force paginator",
-#   "no dm_traceback",
-# ]
-
-
-# for flag in flags: os.environ[("jishaku_"+flag).upper().replace(" ","_")] = "t"
-# del flags
 # ─── BOT SETUP ─────────────────────────────────────────────────────────────────
 class AIChatBot(commands.Bot):
     shape: AsyncShape
@@ -51,9 +41,9 @@ class AIChatBot(commands.Bot):
         intents = discord.Intents.all()
         
         super().__init__(
-        command_prefix='$',  # You can change this prefix as needed
-        intents=intents,
-       # help_command=None  # Disable default help command if you want
+          command_prefix='$',  # You can change this prefix as needed
+          intents=intents,
+          # help_command=None  # Disable default help command if you want
         )
 
     async def setup_hook(self):
@@ -62,18 +52,26 @@ class AIChatBot(commands.Bot):
           # Load the AI chatbot cog
             await self.load_extension("ai_chatbot_cog")
             # await self.load_extension("jishaku")
-            logging.info("✅ AI Chatbot cog loaded successfully")
+            # logging.info("✅ AI Chatbot cog loaded successfully")
+            await Tortoise.init(config=config.tortoise)
+            await Tortoise.generate_schemas(safe=True)
+            logging.info("✅ DB loaded!")
+      
         
-            # Load the image caption cog
-            # await self.load_extension('image_caption_cog')
-            # logging.info("✅ Image Caption cog loaded successfully")
-            
-            # Sync slash commands
             await self.tree.sync()
             logging.info("✅ Slash commands synced")
         except Exception as e:
-            logging.error(f"❌ Failed to load cog: {e}")
+            # logging.error(f"❌ Failed to load cog: {e}")
+            raise e
 
+  
+    @property
+    def pool(self):
+        try:
+            return Tortoise.get_connection("default")._pool
+        except:
+            return None
+          
     async def on_ready(self):
         logging.info(f"🤖 {self.user} is now online!")
         logging.info(f"📊 Connected to {len(self.guilds)} servers")
