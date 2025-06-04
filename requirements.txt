@@ -3,3 +3,5 @@ discord.py
 flask
 asyncio
 logger
+tortoise-orm
+asyncpg
