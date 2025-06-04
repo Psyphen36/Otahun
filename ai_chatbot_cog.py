@@ -16,6 +16,7 @@ from shapesinc import (
   ShapeChannel,
   ContentType
 )
+from models import DBChannel, DBUser
 # ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 
 MAX_CHARS = 2000
@@ -97,22 +98,30 @@ class AIChatbotCog(commands.Cog):
   def __init__(self, bot: commands.Bot):
     self.bot = bot
     self.shape = bot.shape
-    self.active_channels: Set[int] = set()
+    # self.active_channels: Set[int] = set()
     self.rate_limits: Dict[int, List[datetime]] = {}
-    self.user_map = {}
+    # self.user_map = {}
 
-  def user(self, id: int) -> ShapeUser:
-    u=self.user_map.get(id)
-    if u: return u
-    self.user_map[id]=ShapeUser(str(id)[5:])
-    return self.user(id)
+  @property
+  def db(self):
+    return self.bot.pool
+    
+  async def user_from_db(self, id: int) -> DBUser:
+    return (await DBUser.get_or_create(id=id, sid=str(id)[5:]))[0]
+    
+  async def user(self, id: int) -> ShapeUser:
+    u=await self.user_from_db(id)
+    kw={}
+    if u.auth_token:
+        kw["auth_token"]=u.auth_token
+    return ShapeUser(u.sid, **kw)
 
   @app_commands.command(
     name="authorise",
     description="Authorise yourself!"
   )
   async def authorise(self, ctx, code: str = ""):
-    user = self.user(ctx.user.id)
+    user = await self.user(ctx.user.id)
     url, auth = user.auth(self.shape)
     if not code:
       return await ctx.response.send_message(
@@ -121,14 +130,15 @@ class AIChatbotCog(commands.Cog):
       
     try:
       await auth(code)
+      await (await self.user_from_db(ctx.user.id)).set_token(user.auth_token)
     except Exception as e:
       await ctx.response.send_message(
-        f"Couldn't authorise you!", ephemeral=True
+        f"Couldn't authorise you! An error occurred, contact support!", ephemeral=True
       )
       raise e
       
     return await ctx.response.send_message(
-        f"Successfully authorises you!", ephemeral=True
+        f"Successfully authorised you!", ephemeral=True
       )
       
   @app_commands.command(
@@ -136,25 +146,28 @@ class AIChatbotCog(commands.Cog):
     description="Toggle active listening in this channel"
   )
   async def active(self, interaction: discord.Interaction):
-    cid = interaction.channel_id
-    if cid in self.active_channels:
-      self.active_channels.remove(cid)
+    c = (await DBChannel.get_or_create(id=interaction.channel_id))[0]
+    
+    if c.active:
+      # self.active_channels.remove(cid)
       await interaction.response.send_message(
         f"🔕 I will now ignore this channel.", ephemeral=True
       )
     else:
-      self.active_channels.add(cid)
+      # self.active_channels.add(cid)
       await interaction.response.send_message(
         f"✅ I am now active in this channel!", ephemeral=True
       )
+    await c.toggle_active()
 
   @commands.command()
   async def deactivate(self, ctx, channel: discord.TextChannel = None):
     """Deactivates auto-chatbot in a channel!"""
     channel = channel or ctx.channel
-    cid = channel.id
-    if cid in self.active_channels:
-      self.active_channels.remove(cid)
+    c = (await DBChannel.get_or_create(id=channel.id))[0]
+    if c.active:
+      # self.active_channels.remove(cid)
+      await c.toggle_active()
       return await ctx.reply("🔕 Deactivated: back to mention-only mode.")
       
     await ctx.reply("⚠️ I'm not currently activated here.")
@@ -163,9 +176,10 @@ class AIChatbotCog(commands.Cog):
   async def activate(self, ctx, channel: discord.TextChannel = None):
     """Activates auto-chatbot in a channel!"""
     channel = channel or ctx.channel
-    cid = channel.id
-    if cid not in self.active_channels:
-      self.active_channels.add(cid)
+    c = (await DBChannel.get_or_create(id=channel.id))[0]
+    if not c.active:
+      # self.active_channels.add(cid)
+      await c.toggle_active()
       return await ctx.reply("✅ Activated: I'll now listen here without a mention.")
 
     await ctx.reply("⚠️ I'm already activated in this channel.")
@@ -221,7 +235,8 @@ class AIChatbotCog(commands.Cog):
         except Exception:
           pass
 
-      is_active = message.channel.id in self.active_channels
+      ch = await DBChannel.get_or_create(id=message.channel.id)
+      is_active = ch[0].active
       # If the channel is active, or we're mentioned/replied‐to, or
       # a keyword triggered, proceed; otherwise bail out.
       if not (is_active or is_mentioned or is_reply_to_bot or forced_active):
@@ -272,7 +287,7 @@ class AIChatbotCog(commands.Cog):
       )
       res = await self.shape.prompt(
         Message.new(content, files),
-        user = self.user(message.author.id),
+        user = await self.user(message.author.id),
         channel = ShapeChannel(str(message.channel.id)[5:])
       )
       for choice in res.choices:
